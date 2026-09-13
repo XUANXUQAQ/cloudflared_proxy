@@ -87,7 +87,6 @@ func (p *Proxy) ProxyHTTP(
 
 	req := tr.Request
 	p.appendTagHeaders(req)
-
 	_, ruleSpan := tr.Tracer().Start(req.Context(), "ingress_match",
 		trace.WithAttributes(attribute.String("req-host", req.Host)))
 	rule, ruleNum := p.ingressRules.FindMatchingRule(req.Host, req.URL.Path)
@@ -137,7 +136,7 @@ func (p *Proxy) ProxyHTTP(
 		p.proxyLocalRequest(originProxy, w, req, isWebsocket)
 		return nil
 	default:
-		return fmt.Errorf("Unrecognized service: %s, %t", rule.Service, originProxy)
+		return fmt.Errorf("unrecognized service: %s, %t", rule.Service, originProxy)
 	}
 }
 
@@ -193,7 +192,7 @@ func (p *Proxy) proxyHTTPRequest(
 ) error {
 	roundTripReq := tr.Request
 	if isWebsocket {
-		roundTripReq = tr.Clone(tr.Request.Context())
+		roundTripReq = tr.Clone(tr.Context())
 		roundTripReq.Header.Set("Connection", "Upgrade")
 		roundTripReq.Header.Set("Upgrade", "websocket")
 		roundTripReq.Header.Set("Sec-Websocket-Version", "13")
@@ -203,7 +202,7 @@ func (p *Proxy) proxyHTTPRequest(
 		// Support for WSGI Servers by switching transfer encoding from chunked to gzip/deflate
 		if disableChunkedEncoding {
 			roundTripReq.TransferEncoding = []string{"gzip", "deflate"}
-			cLength, err := strconv.Atoi(tr.Request.Header.Get("Content-Length"))
+			cLength, err := strconv.Atoi(tr.Header.Get("Content-Length"))
 			if err == nil {
 				roundTripReq.ContentLength = int64(cLength)
 			}
@@ -228,7 +227,7 @@ func (p *Proxy) proxyHTTPRequest(
 	}
 
 	tracing.EndWithStatusCode(ttfbSpan, resp.StatusCode)
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	headers := make(http.Header, len(resp.Header))
 	// copy headers
@@ -249,11 +248,11 @@ func (p *Proxy) proxyHTTPRequest(
 		if !ok {
 			return errors.New("internal error: unsupported connection type")
 		}
-		defer rwc.Close()
+		defer func() { _ = rwc.Close() }()
 
 		eyeballStream := &bidirectionalStream{
 			writer: w,
-			reader: tr.Request.Body,
+			reader: tr.Body,
 		}
 
 		stream.Pipe(eyeballStream, rwc, logger)
@@ -292,7 +291,7 @@ func (p *Proxy) proxyStream(
 		return err
 	}
 	connectSpan.End()
-	defer originConn.Close()
+	defer func() { _ = originConn.Close() }()
 	logger.Debug().Msg("origin connection established")
 
 	encodedSpans := tr.GetSpans()
@@ -331,7 +330,7 @@ func (p *Proxy) proxyTCPStream(
 		return err
 	}
 	connectSpan.End()
-	defer originConn.Close()
+	defer func() { _ = originConn.Close() }()
 	logger.Debug().Msg("origin connection established")
 
 	encodedSpans := tr.GetSpans()

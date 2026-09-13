@@ -10,7 +10,7 @@ You can also use `cloudflared` to access Tunnel origins (that are protected with
 at Layer 4 (i.e., not HTTP/websocket), which is relevant for use cases such as SSH, RDP, etc.
 Such usages are available under `cloudflared access help`.
 
-You can instead use [WARP client](https://developers.cloudflare.com/cloudflare-one/team-and-resources/devices/warp/)
+You can instead use [WARP client](https://developers.cloudflare.com/warp-client/)
 to access private origins behind Tunnels for Layer 4 traffic without requiring `cloudflared access` commands on the client side.
 
 
@@ -40,7 +40,7 @@ User documentation for Cloudflare Tunnel can be found at https://developers.clou
 
 Once installed, you can authenticate `cloudflared` into your Cloudflare account and begin creating Tunnels to serve traffic to your origins.
 
-* Create a Tunnel with [these instructions](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/)
+* Create a Tunnel with [these instructions](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/)
 * Route traffic to that Tunnel:
   * Via public [DNS records in Cloudflare](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/routing-to-tunnel/dns/)
   * Or via a public hostname guided by a [Cloudflare Load Balancer](https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/routing-to-tunnel/public-load-balancers/)
@@ -62,7 +62,7 @@ For example, as of January 2023 Cloudflare will support cloudflared version 2023
 ### Requirements
 - [GNU Make](https://www.gnu.org/software/make/)
 - [capnp](https://capnproto.org/install.html)
-- [go >= 1.24](https://go.dev/doc/install)
+- [go >= 1.26](https://go.dev/doc/install)
 - Optional tools:
   - [capnpc-go](https://pkg.go.dev/zombiezen.com/go/capnproto2/capnpc-go)
   - [goimports](https://pkg.go.dev/golang.org/x/tools/cmd/goimports)
@@ -79,4 +79,11 @@ To locally run the tests run `make test`
 To format the code and keep a good code quality use `make fmt` and `make lint`
 
 ### Mocks
-After changes on interfaces you might need to regenerate the mocks, so run `make mock`
+After changes on interfaces you might need to regenerate the mocks, so run `make mocks`
+
+### Git Hooks
+To avoid CI errors, you can install pre-push hooks that run linting and tests before each push:
+```bash
+make install-hooks
+```
+This will configure git to use the hooks in `.githooks/` that run `make fmt-check lint test` before each push.

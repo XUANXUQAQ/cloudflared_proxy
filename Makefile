@@ -155,9 +155,17 @@ endif
 container:
 	docker build --build-arg=TARGET_ARCH=$(TARGET_ARCH) --build-arg=TARGET_OS=$(TARGET_OS) -t cloudflare/cloudflared-$(TARGET_OS)-$(TARGET_ARCH):"$(VERSION)" .
 
+.PHONY: container-fips
+container-fips:
+	docker build -f Dockerfile.fips.$(TARGET_ARCH) -t cloudflare/cloudflared-fips-linux-$(TARGET_ARCH):"$(VERSION)" .
+
 .PHONY: generate-docker-version
 generate-docker-version:
 	echo latest $(VERSION) > versions
+
+.PHONY: generate-internal-image-version
+generate-internal-image-version:
+	echo $(VERSION) > versions-internal
 
 
 .PHONY: test
@@ -289,3 +297,9 @@ ci-test: fmt-check lint test
 .PHONY: ci-fips-test
 ci-fips-test:
 	@FIPS=true $(MAKE) ci-test
+
+.PHONY: install-hooks
+install-hooks:
+	git config core.hooksPath .githooks
+	@echo "Git hooks installed from .githooks/"
+	@echo "Pre-push hook will run: make fmt-check lint test"
