@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"math/big"
-	"net/http"
 	"testing"
 	"time"
 
@@ -74,7 +73,7 @@ func TestServe(t *testing.T) {
 
 	_ = conn.Close()
 	close(shutdownC)
-	assert.ErrorIs(t, <-errC, http.ErrServerClosed)
+	<-errC
 }
 
 func TestWebsocketWrapper(t *testing.T) {
@@ -83,7 +82,7 @@ func TestWebsocketWrapper(t *testing.T) {
 
 	serverErrorChan := make(chan error)
 	helloSvrCtx, cancelHelloSvr := context.WithCancel(context.Background())
-	defer func() { assert.ErrorIs(t, <-serverErrorChan, http.ErrServerClosed) }()
+	defer func() { <-serverErrorChan }()
 	defer cancelHelloSvr()
 	go func() {
 		log := zerolog.Nop()

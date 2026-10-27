@@ -589,7 +589,7 @@ func waitToShutdown(wg *sync.WaitGroup,
 			defer ticker.Stop()
 			select {
 			case <-ticker.C:
-			case <-errC: //nolint:errcheck // Only wait for service termination during graceful shutdown.
+			case <-errC:
 			}
 		}
 	}
@@ -602,7 +602,7 @@ func waitToShutdown(wg *sync.WaitGroup,
 	go func() {
 		for {
 			select {
-			case <-errC: //nolint:errcheck // Discard errors while waiting for clean exit.
+			case <-errC: // ignore
 			case <-stopDiscarding:
 				return
 			}
